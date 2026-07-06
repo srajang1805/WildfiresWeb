@@ -18,6 +18,14 @@ RUN pip install --no-cache-dir sentence-transformers faiss-cpu xgboost scikit-le
 
 COPY . .
 
+# Move engine modules into wildfire_engine/ subdirectory for correct import paths
+RUN mkdir -p wildfire_engine && \
+    mv __init__.py wildfire_engine/ 2>/dev/null || true && \
+    mv config wildfire_engine/ 2>/dev/null || true && \
+    mv utils wildfire_engine/ 2>/dev/null || true && \
+    mv inference wildfire_engine/ 2>/dev/null || true && \
+    mv weather wildfire_engine/ 2>/dev/null || true
+
 EXPOSE 8000
 
 RUN addgroup --system --gid 1001 app && adduser --system --uid 1001 app && chown -R app:app /app

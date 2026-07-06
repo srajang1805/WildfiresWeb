@@ -1,9 +1,11 @@
 import sys
 import os
 
-_base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if _base not in sys.path:
-    sys.path.insert(0, _base)
+# Ensure the project root is on sys.path for both 'backend' and 'wildfire_engine' imports
+_base = os.path.dirname(os.path.abspath(__file__))  # backend/
+_project = os.path.dirname(_base)                     # project root
+if _project not in sys.path:
+    sys.path.insert(0, _project)
 
 import logging
 from contextlib import asynccontextmanager
