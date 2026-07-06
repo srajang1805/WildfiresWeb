@@ -2,28 +2,32 @@
 
 import { useAppStore } from "@/stores/appStore";
 import { usePrediction } from "@/hooks/usePrediction";
-import { PANEL, PANEL_LABEL, PANEL_TEXT, RISK_COLORS } from "@/lib/constants";
+import { PANEL, RISK_COLORS } from "@/lib/constants";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Thermometer, Droplets, Wind } from "lucide-react";
+import { X, Thermometer, Droplets, Wind, MapPin, Activity } from "lucide-react";
+
+function riskTier(risk: number): keyof typeof RISK_COLORS {
+  if (risk < 20) return "low";
+  if (risk < 40) return "moderate";
+  if (risk < 65) return "high";
+  if (risk < 85) return "veryHigh";
+  return "extreme";
+}
+
+function riskLabel(risk: number): string {
+  if (risk < 20) return "Low";
+  if (risk < 40) return "Moderate";
+  if (risk < 65) return "High";
+  if (risk < 85) return "Very High";
+  return "Extreme";
+}
 
 export default function PredictionModal() {
   const selectedPoint = useAppStore((s) => s.selectedPoint);
   const setSelectedPoint = useAppStore((s) => s.setSelectedPoint);
   const predictionMode = useAppStore((s) => s.predictionMode);
-
-  const { data, isLoading } = usePrediction(
-    selectedPoint?.lat ?? null,
-    selectedPoint?.lon ?? null
-  );
-
+  const { data, isLoading } = usePrediction(selectedPoint?.lat ?? null, selectedPoint?.lon ?? null);
   const open = predictionMode && selectedPoint !== null;
-
-  function riskTier(risk: number): keyof typeof RISK_COLORS {
-    if (risk < 20) return "low";
-    if (risk < 40) return "moderate";
-    if (risk < 65) return "high";
-    return "extreme";
-  }
 
   return (
     <AnimatePresence>
@@ -32,54 +36,74 @@ export default function PredictionModal() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 z-40 flex items-center justify-center bg-black/20 backdrop-blur-sm"
+          className="absolute inset-0 z-40 flex items-center justify-center bg-slate-900/10 backdrop-blur-sm"
           onClick={() => setSelectedPoint(null)}
         >
           <motion.div
-            initial={{ scale: 0.95, y: 10 }}
+            initial={{ scale: 0.96, y: 8 }}
             animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.95, y: 10 }}
+            exit={{ scale: 0.96, y: 8 }}
             transition={{ duration: 0.2 }}
-            className={`${PANEL} relative w-72 p-4`}
+            className={`${PANEL} relative w-80 p-5`}
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              onClick={() => setSelectedPoint(null)}
-              className="absolute right-3 top-3 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
-            >
+            <button onClick={() => setSelectedPoint(null)} className="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
               <X className="h-4 w-4" />
             </button>
-            <p className={`${PANEL_LABEL} mb-3`}>Point Analysis</p>
+
+            <p className="mb-4 text-[11px] font-bold uppercase tracking-widest text-slate-400">Point Analysis</p>
+
             {isLoading ? (
-              <div className="flex justify-center py-6">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
+              <div className="flex justify-center py-8">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
               </div>
             ) : data ? (
-              <div className="space-y-3">
-                <div className={`${PANEL_TEXT} font-mono`}>
-                  {selectedPoint.lat.toFixed(4)}, {selectedPoint.lon.toFixed(4)}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-[13px] text-slate-500">
+                  <MapPin className="h-3.5 w-3.5" />
+                  <span className="font-mono text-slate-700">{selectedPoint.lat.toFixed(4)}, {selectedPoint.lon.toFixed(4)}</span>
                 </div>
+
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="rounded-md bg-zinc-100 p-2 dark:bg-zinc-800">
-                    <Thermometer className="mb-1 h-3 w-3 text-zinc-400" />
-                    <div className={PANEL_TEXT}>{data.temperature}°C</div>
+                  <div className="rounded-lg bg-slate-50 p-3 text-center">
+                    <Thermometer className="mx-auto mb-1 h-3.5 w-3.5 text-slate-400" />
+                    <div className="text-[13px] font-semibold text-slate-800">{data.temperature}°C</div>
                   </div>
-                  <div className="rounded-md bg-zinc-100 p-2 dark:bg-zinc-800">
-                    <Droplets className="mb-1 h-3 w-3 text-zinc-400" />
-                    <div className={PANEL_TEXT}>{data.humidity}%</div>
+                  <div className="rounded-lg bg-slate-50 p-3 text-center">
+                    <Droplets className="mx-auto mb-1 h-3.5 w-3.5 text-slate-400" />
+                    <div className="text-[13px] font-semibold text-slate-800">{data.humidity}%</div>
                   </div>
-                  <div className="rounded-md bg-zinc-100 p-2 dark:bg-zinc-800">
-                    <Wind className="mb-1 h-3 w-3 text-zinc-400" />
-                    <div className={PANEL_TEXT}>{data.wind} m/s</div>
+                  <div className="rounded-lg bg-slate-50 p-3 text-center">
+                    <Wind className="mx-auto mb-1 h-3.5 w-3.5 text-slate-400" />
+                    <div className="text-[13px] font-semibold text-slate-800">{data.wind} m/s</div>
                   </div>
                 </div>
-                <div className="flex items-center justify-between rounded-md bg-zinc-100 p-3 dark:bg-zinc-800">
-                  <span className={PANEL_TEXT}>Fire Risk</span>
-                  <span
-                    className="rounded px-2 py-0.5 text-xs font-semibold text-white"
-                    style={{ backgroundColor: RISK_COLORS[riskTier(data.wildfire_risk)] }}
-                  >
-                    {data.wildfire_risk.toFixed(1)}%
+
+                <div className="rounded-lg bg-slate-50 p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[13px] text-slate-500">Fire Risk</span>
+                    <span className="text-[13px] font-semibold text-slate-700">{riskLabel(data.wildfire_risk)}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-2 flex-1 rounded-full bg-slate-200">
+                      <div
+                        className="h-2 rounded-full transition-all"
+                        style={{
+                          width: `${Math.min(100, data.wildfire_risk)}%`,
+                          backgroundColor: RISK_COLORS[riskTier(data.wildfire_risk)],
+                        }}
+                      />
+                    </div>
+                    <span className="text-[13px] font-bold tabular-nums" style={{ color: RISK_COLORS[riskTier(data.wildfire_risk)] }}>
+                      {data.wildfire_risk.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 rounded-lg bg-blue-50 p-3">
+                  <Activity className="h-3.5 w-3.5 text-blue-600" />
+                  <span className="text-[12px] text-blue-700">
+                    Fire Risk Index: <strong>{riskLabel(data.wildfire_risk)}</strong>
                   </span>
                 </div>
               </div>

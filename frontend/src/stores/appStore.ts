@@ -1,98 +1,50 @@
 import { create } from "zustand";
 
-export interface HeatPoint {
-  lat: number;
-  lon: number;
-  risk: number;
-}
+const RESERVE_BOUNDS: Record<string, [[number, number], [number, number]]> = {
+  all: [[6.5, 67.0], [38.0, 98.0]],
+  corbett: [[29.44, 78.68], [29.65, 79.12]],
+  kanha: [[22.24, 80.42], [22.41, 80.74]],
+  periyar: [[9.44, 77.00], [9.64, 77.33]],
+  similipal: [[21.68, 86.05], [21.88, 86.45]],
+  kaziranga: [[26.56, 93.02], [26.73, 93.38]],
+};
 
 interface AppState {
-  viewState: {
-    latitude: number;
-    longitude: number;
-    zoom: number;
-  };
-  setViewState: (state: Partial<AppState["viewState"]>) => void;
+  viewState: { latitude: number; longitude: number; zoom: number };
+  setViewState: (s: Partial<AppState["viewState"]>) => void;
 
   predictionMode: boolean;
-  setPredictionMode: (mode: boolean) => void;
-
-  darkMode: boolean;
-  toggleDarkMode: () => void;
-  setDarkMode: (mode: boolean) => void;
-
-  fireRegionFilter: boolean;
-  setFireRegionFilter: (val: boolean) => void;
-  forestFilter: boolean;
-  setForestFilter: (val: boolean) => void;
+  setPredictionMode: (m: boolean) => void;
 
   heatmapVisible: boolean;
-  setHeatmapVisible: (val: boolean) => void;
+  setHeatmapVisible: (v: boolean) => void;
   firmsVisible: boolean;
-  setFirmsVisible: (val: boolean) => void;
-  spreadVisible: boolean;
-  setSpreadVisible: (val: boolean) => void;
-  windVisible: boolean;
-  setWindVisible: (val: boolean) => void;
-
-  sidebarOpen: boolean;
-  setSidebarOpen: (val: boolean) => void;
+  setFirmsVisible: (v: boolean) => void;
 
   selectedPoint: { lat: number; lon: number } | null;
-  setSelectedPoint: (point: { lat: number; lon: number } | null) => void;
+  setSelectedPoint: (p: { lat: number; lon: number } | null) => void;
 
-  heatmapData: HeatPoint[];
-  setHeatmapData: (data: HeatPoint[]) => void;
-
-  hoverPoint: { lat: number; lon: number; risk: number } | null;
-  setHoverPoint: (point: { lat: number; lon: number; risk: number } | null) => void;
-
-  timelineIndex: number;
-  setTimelineIndex: (i: number) => void;
+  activeReserve: string;
+  setActiveReserve: (r: string) => void;
+  getReserveBounds: (r: string) => [[number, number], [number, number]];
 }
 
-export const useAppStore = create<AppState>((set) => ({
-  viewState: {
-    latitude: 22.5,
-    longitude: 78.5,
-    zoom: 5.5,
-  },
-  setViewState: (partial) =>
-    set((s) => ({ viewState: { ...s.viewState, ...partial } })),
+export const useAppStore = create<AppState>((set, get) => ({
+  viewState: { latitude: 22.5, longitude: 78.5, zoom: 5.8 },
+  setViewState: (p) => set((s) => ({ viewState: { ...s.viewState, ...p } })),
 
   predictionMode: false,
-  setPredictionMode: (mode) => set({ predictionMode: mode }),
-
-  darkMode: false,
-  toggleDarkMode: () => set((s) => ({ darkMode: !s.darkMode })),
-  setDarkMode: (mode) => set({ darkMode: mode }),
-
-  fireRegionFilter: false,
-  setFireRegionFilter: (val) => set({ fireRegionFilter: val }),
-  forestFilter: false,
-  setForestFilter: (val) => set({ forestFilter: val }),
+  setPredictionMode: (m) => set({ predictionMode: m }),
 
   heatmapVisible: true,
-  setHeatmapVisible: (val) => set({ heatmapVisible: val }),
+  setHeatmapVisible: (v) => set({ heatmapVisible: v }),
   firmsVisible: false,
-  setFirmsVisible: (val) => set({ firmsVisible: val }),
-  spreadVisible: false,
-  setSpreadVisible: (val) => set({ spreadVisible: val }),
-  windVisible: false,
-  setWindVisible: (val) => set({ windVisible: val }),
-
-  sidebarOpen: false,
-  setSidebarOpen: (val) => set({ sidebarOpen: val }),
+  setFirmsVisible: (v) => set({ firmsVisible: v }),
 
   selectedPoint: null,
-  setSelectedPoint: (point) => set({ selectedPoint: point }),
+  setSelectedPoint: (p) => set({ selectedPoint: p }),
 
-  heatmapData: [],
-  setHeatmapData: (data) => set({ heatmapData: data }),
-
-  hoverPoint: null,
-  setHoverPoint: (point) => set({ hoverPoint: point }),
-
-  timelineIndex: 0,
-  setTimelineIndex: (i) => set({ timelineIndex: i }),
+  activeReserve: "all",
+  setActiveReserve: (r) => set({ activeReserve: r }),
+  getReserveBounds: (r) => RESERVE_BOUNDS[r] || RESERVE_BOUNDS.all,
 }));

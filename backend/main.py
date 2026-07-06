@@ -1,7 +1,9 @@
 import sys
 import os
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+_base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _base not in sys.path:
+    sys.path.insert(0, _base)
 
 import logging
 from contextlib import asynccontextmanager
@@ -9,6 +11,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -17,15 +20,17 @@ async def lifespan(app: FastAPI):
     from backend.services.firms import start_firms_worker
 
     start_heatmap_worker()
-    start_firms_worker()
+    if os.environ.get("FIRMS_API_KEY"):
+        start_firms_worker()
     yield
 
 
-app = FastAPI(title="Wildfire Intelligence Platform", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="Wildfires India API", version="1.0.0", lifespan=lifespan)
 
+ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[o.strip() for o in ALLOWED_ORIGINS],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -36,14 +41,18 @@ from backend.routers.predict import router as predict_router
 from backend.routers.tile_route import router as tile_router
 from backend.routers.firms_route import router as firms_router
 from backend.routers.search import router as search_router
+from backend.routers.chat import router as chat_router
+from backend.routers.model_info import router as model_router
 
 app.include_router(heatmap_router)
 app.include_router(predict_router)
 app.include_router(tile_router)
 app.include_router(firms_router)
 app.include_router(search_router)
+app.include_router(chat_router)
+app.include_router(model_router)
 
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "wildfire-intelligence-api"}
+    return {"status": "ok", "service": "wildfires-india-api"}

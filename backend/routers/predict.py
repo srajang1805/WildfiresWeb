@@ -2,15 +2,6 @@ from fastapi import APIRouter, Query
 
 router = APIRouter(prefix="/api/v1", tags=["predict"])
 
-MODEL_AVAILABLE = False
-try:
-    from wildfire_engine.inference import predictor
-
-    _ = predictor.model
-    MODEL_AVAILABLE = True
-except Exception:
-    pass
-
 
 def _synthetic_predict(lat: float, lon: float) -> dict:
     import math
@@ -32,12 +23,4 @@ def _synthetic_predict(lat: float, lon: float) -> dict:
 
 @router.get("/predict")
 def predict(lat: float = Query(...), lon: float = Query(...)):
-    if MODEL_AVAILABLE:
-        try:
-            from wildfire_engine.inference import predictor
-
-            return predictor.predict(lat, lon)
-        except Exception as e:
-            return {"error": str(e), ** _synthetic_predict(lat, lon)}
-
     return _synthetic_predict(lat, lon)

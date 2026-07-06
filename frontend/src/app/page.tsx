@@ -1,28 +1,38 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useAppStore } from "@/stores/appStore";
 import TopBar from "@/components/layout/TopBar";
 import Legend from "@/components/panels/Legend";
 import LayerControls from "@/components/panels/LayerControls";
+import ForestFilter from "@/components/panels/ForestFilter";
 import PredictionModal from "@/components/overlays/PredictionModal";
+import Chatbot from "@/components/overlays/Chatbot";
+import TopRisksPanel from "@/components/panels/TopRisksPanel";
 
 const MapView = dynamic(() => import("@/components/map/MapView"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full w-full items-center justify-center bg-zinc-200 dark:bg-zinc-800">
-      <div className="h-10 w-10 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
+    <div className="flex h-full w-full items-center justify-center bg-slate-100">
+      <div className="h-10 w-10 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
     </div>
   ),
 });
 
 export default function Home() {
+  const activeReserve = useAppStore((s) => s.activeReserve);
+  const setActiveReserve = useAppStore((s) => s.setActiveReserve);
+
   return (
-    <main className="relative h-full w-full overflow-hidden">
+    <main className="relative h-[calc(100vh-64px)] w-full overflow-hidden">
       <MapView />
       <TopBar />
+      <ForestFilter active={activeReserve} onChange={(r) => setActiveReserve(r.id)} />
+      <TopRisksPanel />
       <LayerControls />
       <Legend />
       <PredictionModal />
+      <Chatbot />
     </main>
   );
 }

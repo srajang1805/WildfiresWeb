@@ -11,10 +11,18 @@ _firms_cache_time: str = ""
 _firms_lock = threading.Lock()
 FIRMS_CACHE_TTL = 3600
 
-FIRMS_URL = "https://firms.modaps.eosdis.nasa.gov/api/country/csv/79884934cf23d4648ea9e2beeda8fdde/VIIRS_NOAA20_NRT/IND/1"
+import os
+FIRMS_API_KEY = os.environ.get("FIRMS_API_KEY", "")
+FIRMS_URL = (
+    f"https://firms.modaps.eosdis.nasa.gov/api/area/csv/{FIRMS_API_KEY}"
+    f"/VIIRS_NOAA20_NRT/66.0,6.0,100.0,38.0/1"
+) if FIRMS_API_KEY else ""
 
 
 def _fetch_firms() -> list[dict]:
+    if not FIRMS_API_KEY:
+        logger.warning("FIRMS API key not set. Set FIRMS_API_KEY env variable.")
+        return []
     try:
         r = requests.get(FIRMS_URL, timeout=30)
         r.raise_for_status()

@@ -1,27 +1,30 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { PANEL, PANEL_LABEL, PANEL_TEXT, PANEL_MUTED, RISK_TIERS, RISK_COLORS } from "@/lib/constants";
+import { RISK_TIERS, RISK_COLORS } from "@/lib/constants";
+import { PANEL } from "@/lib/constants";
 
 export default function Legend() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3, duration: 0.2 }}
-      className="absolute bottom-6 right-4 z-30 w-40"
+      transition={{ delay: 0.4, duration: 0.3 }}
+      className="absolute bottom-24 right-4 z-30 w-48"
     >
-      <div className={`${PANEL} p-3`}>
-        <p className={`${PANEL_LABEL} mb-2`}>Risk Index</p>
-        <div className="space-y-1.5">
-          {RISK_TIERS.map((tier) => (
-            <div key={tier.key} className="flex items-center gap-2">
+      <div className={`${PANEL} p-4`}>
+        <p className="mb-3 text-[11px] font-bold uppercase tracking-widest text-slate-400">
+          Risk Index
+        </p>
+        <div className="space-y-2">
+          {RISK_TIERS.map((t) => (
+            <div key={t.key} className="flex items-center gap-2.5">
               <span
-                className="h-2.5 w-2.5 shrink-0 rounded-full"
-                style={{ backgroundColor: RISK_COLORS[tier.key] }}
+                className="h-3 w-3 shrink-0 rounded-full ring-1 ring-black/5"
+                style={{ backgroundColor: RISK_COLORS[t.key] }}
               />
-              <span className={`${PANEL_TEXT} flex-1`}>{tier.label}</span>
-              <span className={PANEL_MUTED}>{tier.range}</span>
+              <span className="flex-1 text-[13px] font-medium text-slate-700">{t.label}</span>
+              <span className="text-[12px] tabular-nums text-slate-400">{t.range}</span>
             </div>
           ))}
         </div>

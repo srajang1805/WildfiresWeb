@@ -14,14 +14,6 @@ _cache_time: str = ""
 _lock = threading.Lock()
 
 MODEL_AVAILABLE = False
-try:
-    from wildfire_engine.inference import predictor
-
-    _ = predictor.model
-    MODEL_AVAILABLE = True
-    logger.info("ML model loaded successfully")
-except Exception as e:
-    logger.warning(f"ML model not available: {e}. Using synthetic data.")
 
 
 def _generate_synthetic_heatmap(resolution: float = 0.5) -> list[dict]:

@@ -1,57 +1,44 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { PANEL, PANEL_LABEL, PANEL_TEXT } from "@/lib/constants";
 import { useAppStore } from "@/stores/appStore";
-
-interface ToggleRow {
-  key: string;
-  label: string;
-  value: boolean;
-  onChange: () => void;
-}
+import { PANEL } from "@/lib/constants";
+import { Layers } from "lucide-react";
 
 export default function LayerControls() {
   const heatmapVisible = useAppStore((s) => s.heatmapVisible);
   const setHeatmapVisible = useAppStore((s) => s.setHeatmapVisible);
   const firmsVisible = useAppStore((s) => s.firmsVisible);
   const setFirmsVisible = useAppStore((s) => s.setFirmsVisible);
-  const spreadVisible = useAppStore((s) => s.spreadVisible);
-  const setSpreadVisible = useAppStore((s) => s.setSpreadVisible);
-  const windVisible = useAppStore((s) => s.windVisible);
-  const setWindVisible = useAppStore((s) => s.setWindVisible);
 
-  const rows: ToggleRow[] = [
-    { key: "heatmap", label: "Fire Risk", value: heatmapVisible, onChange: () => setHeatmapVisible(!heatmapVisible) },
-    { key: "firms", label: "Active Fires", value: firmsVisible, onChange: () => setFirmsVisible(!firmsVisible) },
-    { key: "spread", label: "Spread Sim", value: spreadVisible, onChange: () => setSpreadVisible(!spreadVisible) },
-    { key: "wind", label: "Wind Field", value: windVisible, onChange: () => setWindVisible(!windVisible) },
+  const rows = [
+    { label: "Fire Risk Heatmap", value: heatmapVisible, toggle: () => setHeatmapVisible(!heatmapVisible) },
+    { label: "Active Fires", value: firmsVisible, toggle: () => setFirmsVisible(!firmsVisible) },
   ];
 
   return (
     <motion.div
       initial={{ opacity: 0, x: -12 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: 0.2, duration: 0.2 }}
-      className="absolute bottom-6 left-4 z-30"
+      transition={{ delay: 0.3, duration: 0.3 }}
+      className="absolute bottom-24 left-4 z-30"
     >
-      <div className={`${PANEL} p-3 min-w-[140px]`}>
-        <p className={`${PANEL_LABEL} mb-2`}>Layers</p>
-        <div className="space-y-1">
+      <div className={`${PANEL} p-4`}>
+        <div className="mb-3 flex items-center gap-2">
+          <Layers className="h-3.5 w-3.5 text-slate-400" />
+          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Layers</p>
+        </div>
+        <div className="space-y-1.5">
           {rows.map((row) => (
             <button
-              key={row.key}
-              onClick={row.onChange}
-              className={`flex w-full items-center justify-between gap-3 rounded-md px-2 py-1.5 transition-colors hover:bg-black/5 dark:hover:bg-white/5 ${row.value ? "" : "opacity-50"}`}
+              key={row.label}
+              onClick={row.toggle}
+              className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 transition-colors hover:bg-slate-50"
             >
-              <span className={PANEL_TEXT}>{row.label}</span>
-              <span
-                className={`h-3.5 w-3.5 shrink-0 rounded-[2px] border transition-colors ${
-                  row.value
-                    ? "border-orange-500 bg-orange-500"
-                    : "border-zinc-300 bg-transparent dark:border-zinc-600"
-                }`}
-              />
+              <span className="text-[13px] font-medium text-slate-700">{row.label}</span>
+              <span className={`relative inline-flex h-[20px] w-[36px] shrink-0 items-center rounded-full transition-colors ${row.value ? "bg-blue-600" : "bg-slate-200"}`}>
+                <span className={`inline-block h-[16px] w-[16px] rounded-full bg-white shadow-sm transition-transform ${row.value ? "translate-x-[17px]" : "translate-x-[2px]"}`} />
+              </span>
             </button>
           ))}
         </div>
