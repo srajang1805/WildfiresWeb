@@ -3,42 +3,40 @@ import numpy as np
 from datetime import datetime
 from typing import Optional
 from ..config import config
-from ..utils.features import month_features
+from .feature_engineering import build_feature_array
 from ..utils.filters import apply_snowy_region_filter
-from ..weather.client import weather_client
 
 
 class WildfirePredictor:
     def __init__(self):
         self._model: Optional[object] = None
-        self._model_path = config.default_model_path
+        self._model_path = config.models_dir / "wildfire_ensemble.pkl"
 
     @property
     def model(self):
         if self._model is None:
             try:
-                self._model = joblib.load(self._model_path)
+                self._model = joblib.load(str(self._model_path))
             except FileNotFoundError:
                 raise FileNotFoundError(
                     f"Model not found at {self._model_path}. "
-                    f"Train or place a model file at this path."
                 )
         return self._model
 
     def predict(self, lat: float, lon: float) -> dict:
+        from ..weather.client import weather_client
+
         weather = weather_client.fetch_current(lat, lon)
         temp = weather["temperature"]
         humidity = weather["humidity"]
         wind = weather["wind"]
-
         month = datetime.now().month
-        month_sin, month_cos = month_features(month)
 
-        sample = np.array([[lat, lon, month_sin, month_cos, temp, humidity, wind, 2]])
+        features = build_feature_array(lat, lon, temp, humidity, wind, month)
+        sample = np.array([features])
 
         prob = self.model.predict_proba(sample)[0][1]
         raw_risk = prob * 100
-
         risk = apply_snowy_region_filter(lat, lon, temp, raw_risk)
 
         return {
@@ -49,10 +47,10 @@ class WildfirePredictor:
         }
 
     def predict_batch(self, points: list[tuple[float, float]]) -> list[dict]:
-        weather_results = weather_client.fetch_batch(points)
+        from ..weather.client import weather_client
 
+        weather_results = weather_client.fetch_batch(points)
         month = datetime.now().month
-        month_sin, month_cos = month_features(month)
 
         results = []
         for i, (lat, lon) in enumerate(points):
@@ -61,11 +59,11 @@ class WildfirePredictor:
             humidity = w["humidity"]
             wind_val = w["wind"]
 
-            sample = np.array([[lat, lon, month_sin, month_cos, temp, humidity, wind_val, 2]])
+            features = build_feature_array(lat, lon, temp, humidity, wind_val, month)
+            sample = np.array([features])
 
             prob = self.model.predict_proba(sample)[0][1]
             raw_risk = prob * 100
-
             risk = apply_snowy_region_filter(lat, lon, temp, raw_risk)
 
             results.append({
@@ -77,8 +75,7 @@ class WildfirePredictor:
         return results
 
     def predict_heatmap(self, resolution: float = 0.5) -> list[dict]:
-        from shapely.geometry import Point
-        import json
+        from concurrent.futures import ThreadPoolExecutor
 
         bounds = config.india_bounds
         lat_min, lat_max = bounds["lat_min"], bounds["lat_max"]
@@ -97,7 +94,6 @@ class WildfirePredictor:
         chunk_size = 30
         chunks = [grid_list[i:i + chunk_size] for i in range(0, len(grid_list), chunk_size)]
 
-        from concurrent.futures import ThreadPoolExecutor
         all_points = []
         with ThreadPoolExecutor(max_workers=5) as executor:
             futures = [executor.submit(self.predict_batch, chunk) for chunk in chunks]

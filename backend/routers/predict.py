@@ -1,6 +1,18 @@
 from fastapi import APIRouter, Query
+import logging
 
 router = APIRouter(prefix="/api/v1", tags=["predict"])
+logger = logging.getLogger(__name__)
+
+
+@router.get("/predict")
+def predict(lat: float = Query(...), lon: float = Query(...)):
+    try:
+        from wildfire_engine.inference import predictor
+        return predictor.predict(lat, lon)
+    except Exception as e:
+        logger.warning(f"Model predict failed, falling back to synthetic: {e}")
+        return _synthetic_predict(lat, lon)
 
 
 def _synthetic_predict(lat: float, lon: float) -> dict:
@@ -19,8 +31,3 @@ def _synthetic_predict(lat: float, lon: float) -> dict:
         "humidity": round(60 - 20 * lat_factor + math.cos(month * 0.5) * 10, 1),
         "wind": round(2 + 4 * seasonal, 1),
     }
-
-
-@router.get("/predict")
-def predict(lat: float = Query(...), lon: float = Query(...)):
-    return _synthetic_predict(lat, lon)

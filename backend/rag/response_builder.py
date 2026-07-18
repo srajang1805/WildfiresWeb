@@ -48,10 +48,11 @@ def _find_highest_risk_point(points: list[dict]) -> dict | None:
 
 def _fetch_prediction(lat: float, lon: float) -> dict:
     try:
+        from wildfire_engine.inference import predictor
+        return predictor.predict(lat, lon)
+    except Exception:
         from backend.routers.predict import _synthetic_predict
         return _synthetic_predict(lat, lon)
-    except Exception:
-        return {"wildfire_risk": None, "temperature": None, "humidity": None, "wind": None}
 
 
 def _fetch_heatmap() -> dict:

@@ -17,5 +17,13 @@ evaluation
 preprocessing
 training
 wildlife
+spread
+risk
+explainability
+features
+CNN_BASED_WILDFIRE_PREDICTION
+wildfire_ensemble.pkl
+*.ipynb
+*.xml
 frontend/node_modules
 frontend/.next
