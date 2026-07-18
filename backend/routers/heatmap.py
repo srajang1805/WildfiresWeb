@@ -13,7 +13,7 @@ _heatmap_cache: list[dict] = []
 _cache_time: str = ""
 _lock = threading.Lock()
 
-MODEL_AVAILABLE = True
+MODEL_AVAILABLE = False
 
 
 def _generate_synthetic_heatmap(resolution: float = 0.5) -> list[dict]:

@@ -6,6 +6,8 @@ node_modules/
 .next/
 out/
 models/
+!models/wildfire_ensemble.pkl
 outputs/
 *.pkl
+!models/wildfire_ensemble.pkl
 .DS_Store
