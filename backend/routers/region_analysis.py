@@ -112,16 +112,19 @@ def region_analysis(region: str):
         logger.error(f"Import failed: {e}")
         raise HTTPException(status_code=500, detail="Model not available")
 
-    weather = weather_client.fetch_current(lat, lon)
-    temp = weather["temperature"]
-    humidity = weather["humidity"]
-    wind_val = weather["wind"]
-    month = datetime.now().month
+    try:
+        weather = weather_client.fetch_current(lat, lon)
+        temp = weather["temperature"]
+        humidity = weather["humidity"]
+        wind_val = weather["wind"]
+        month = datetime.now().month
 
-    features = build_features(lat, lon, temp, humidity, wind_val, month)
-
-    result = predictor.predict(lat, lon)
-    risk = result["wildfire_risk"]
+        features = build_features(lat, lon, temp, humidity, wind_val, month)
+        result = predictor.predict(lat, lon)
+        risk = result["wildfire_risk"]
+    except Exception as e:
+        logger.error(f"Prediction failed for {region}: {e}")
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
 
     if risk < 20:
         label = "Low"
