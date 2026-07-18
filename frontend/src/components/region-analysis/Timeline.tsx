@@ -1,23 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Clock, CloudSun, Cpu, Satellite } from "lucide-react";
+import { Clock, CloudSun, Cpu } from "lucide-react";
 
 interface Props {
   lastUpdated: string;
   weatherUpdated?: string;
-  satelliteDate?: string;
 }
 
-export default function Timeline({ lastUpdated, weatherUpdated, satelliteDate }: Props) {
+export default function Timeline({ lastUpdated, weatherUpdated }: Props) {
   const items = [
-    {
-      icon: Satellite,
-      label: "Satellite Imagery",
-      time: satelliteDate || "Not available",
-      color: "text-emerald-500",
-      bg: "bg-emerald-50",
-    },
     {
       icon: CloudSun,
       label: "Weather Updated",
