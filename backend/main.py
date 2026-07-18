@@ -23,10 +23,21 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     from backend.routers.heatmap import start_heatmap_worker
     from backend.services.firms import start_firms_worker
+    import threading
 
     start_heatmap_worker()
     if os.environ.get("FIRMS_API_KEY"):
         start_firms_worker()
+
+    def _preload_rag():
+        try:
+            from backend.rag.retriever import preload
+            preload()
+        except Exception as e:
+            logger.warning(f"RAG preload skipped: {e}")
+
+    threading.Thread(target=_preload_rag, daemon=True).start()
+
     yield
 
 

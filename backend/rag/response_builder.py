@@ -48,19 +48,16 @@ def _find_highest_risk_point(points: list[dict]) -> dict | None:
 
 def _fetch_prediction(lat: float, lon: float) -> dict:
     try:
-        import urllib.request
-        url = f"http://localhost:8001/api/v1/predict?lat={lat}&lon={lon}"
-        with urllib.request.urlopen(url, timeout=5) as r:
-            return json.loads(r.read())
+        from backend.routers.predict import _synthetic_predict
+        return _synthetic_predict(lat, lon)
     except Exception:
         return {"wildfire_risk": None, "temperature": None, "humidity": None, "wind": None}
 
 
 def _fetch_heatmap() -> dict:
     try:
-        import urllib.request
-        with urllib.request.urlopen("http://localhost:8001/api/v1/heatmap", timeout=5) as r:
-            return json.loads(r.read())
+        from backend.routers.heatmap import _heatmap_cache
+        return {"points": _heatmap_cache}
     except Exception:
         return {"points": []}
 
