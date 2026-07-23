@@ -1,10 +1,45 @@
 import joblib
+import json
 import numpy as np
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 from ..config import config
 from .feature_engineering import build_feature_array
 from ..utils.filters import apply_snowy_region_filter
+
+_INDIA_POLY = None
+_GEOJSON_PATH = Path(__file__).resolve().parent.parent / "data" / "india.geojson"
+
+
+def _load_india_polygon():
+    global _INDIA_POLY
+    if _INDIA_POLY is not None:
+        return _INDIA_POLY
+    if not _GEOJSON_PATH.exists():
+        return None
+    from shapely.geometry import shape
+    with open(_GEOJSON_PATH) as f:
+        gj = json.load(f)
+    polys = []
+    for feat in gj.get("features", []):
+        geom = feat.get("geometry", {})
+        try:
+            s = shape(geom)
+            polys.append(s)
+        except Exception:
+            pass
+    _INDIA_POLY = polys if polys else None
+    return _INDIA_POLY
+
+
+def _is_on_land(lat: float, lon: float) -> bool:
+    polys = _load_india_polygon()
+    if polys is None:
+        return True
+    from shapely.geometry import Point
+    pt = Point(lon, lat)
+    return any(p.contains(pt) for p in polys)
 
 
 class WildfirePredictor:
@@ -87,7 +122,9 @@ class WildfirePredictor:
         while lat <= lat_max:
             lon = lon_min
             while lon <= lon_max:
-                grid.append((round(lat, 4), round(lon, 4)))
+                pt = (round(lat, 4), round(lon, 4))
+                if _is_on_land(pt[0], pt[1]):
+                    grid.append(pt)
                 lon += resolution
             lat += resolution
 
@@ -115,6 +152,9 @@ class WildfirePredictor:
                 feature_rows.append(features)
                 chunk_meta.append((lat, lon, temp))
 
+            if not feature_rows:
+                continue
+
             arr = np.array(feature_rows, dtype=np.float32)
             probs = self.model.predict_proba(arr)[:, 1]
 
@@ -122,7 +162,7 @@ class WildfirePredictor:
                 raw_risk = float(probs[i]) * 100
                 risk = apply_snowy_region_filter(lat, lon, temp, raw_risk)
 
-                if risk > 0.5:
+                if risk > 0.5 and _is_on_land(lat, lon):
                     all_points.append({
                         "lat": lat,
                         "lon": lon,
