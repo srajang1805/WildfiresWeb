@@ -3,7 +3,6 @@ import json
 import pickle
 from pathlib import Path
 from fastapi import APIRouter
-import faiss
 
 router = APIRouter(prefix="/api/v1", tags=["model"])
 ENGINE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -83,6 +82,7 @@ def model_info():
         index_dir = ENGINE_DIR / "backend" / "rag" / "index"
         if (index_dir / "faiss.index").exists():
             try:
+                import faiss
                 idx = faiss.read_index(str(index_dir / "faiss.index"))
                 rag_stats["faiss_dimension"] = idx.d
                 rag_stats["faiss_total_vectors"] = idx.ntotal

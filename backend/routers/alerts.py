@@ -6,7 +6,8 @@ router = APIRouter(prefix="/api/v1", tags=["alerts"])
 
 @router.get("/alerts")
 def alerts(limit: int = Query(20, ge=1, le=100)):
-    return {"alerts": get_alerts(limit), "count": len(get_alerts(limit))}
+    data = get_alerts(int(limit))
+    return {"alerts": data, "count": len(data)}
 
 
 @router.get("/alerts/summary")

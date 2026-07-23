@@ -1,7 +1,5 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from backend.rag.retriever import retrieve, _model as _rag_model, _index as _rag_index
-from backend.rag.response_builder import build_response
 
 router = APIRouter(prefix="/api/v1", tags=["chat"])
 
@@ -13,6 +11,8 @@ class ChatRequest(BaseModel):
 
 @router.post("/chat")
 def chat(req: ChatRequest):
+    from backend.rag.retriever import retrieve, _model as _rag_model, _index as _rag_index
+
     if _rag_model is None or _rag_index is None:
         return {
             "answer": (
@@ -27,5 +27,6 @@ def chat(req: ChatRequest):
         }
 
     results = retrieve(req.message, top_k=5)
+    from backend.rag.response_builder import build_response
     response = build_response(req.message, results, req.context)
     return response

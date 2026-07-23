@@ -1,8 +1,6 @@
 import pickle
 import logging
 from pathlib import Path
-import numpy as np
-import faiss
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +24,7 @@ def _load():
             return
     if _index is None and (INDEX_DIR / "faiss.index").exists():
         try:
+            import faiss
             _index = faiss.read_index(str(INDEX_DIR / "faiss.index"))
             with open(INDEX_DIR / "metadata.pkl", "rb") as f:
                 _docs = pickle.load(f)
@@ -51,6 +50,7 @@ def retrieve(query: str, top_k: int = 5) -> list[dict]:
     if _index is None or _model is None:
         return []
 
+    import numpy as np
     embedding = _model.encode([query], normalize_embeddings=True).astype("float32")
     scores, indices = _index.search(embedding, top_k)
 
