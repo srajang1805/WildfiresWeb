@@ -19,9 +19,7 @@ MODEL_AVAILABLE = False
 
 def _generate_synthetic_heatmap(resolution: float = 0.5) -> list[dict]:
     import math
-    import random
 
-    random.seed(42)
     points = []
     lat = 6.5
     month = datetime.now().month
@@ -32,9 +30,7 @@ def _generate_synthetic_heatmap(resolution: float = 0.5) -> list[dict]:
             lat_factor = 1.0 - abs(lat - 22.0) / 20.0
             lon_factor = 1.0 - abs(lon - 80.0) / 15.0
             seasonal = 0.5 + 0.5 * math.sin(2 * math.pi * (month - 3) / 12)
-            base_risk = max(0, lat_factor * lon_factor * seasonal * 100)
-            risk = base_risk + random.uniform(-15, 15)
-            risk = max(0, min(100, risk))
+            risk = max(0, min(100, lat_factor * lon_factor * seasonal * 100 * (0.8 + 0.4 * math.sin(lat * lon * 0.01))))
 
             if risk > 1:
                 points.append({"lat": round(lat, 4), "lon": round(lon, 4), "risk": round(risk, 2)})

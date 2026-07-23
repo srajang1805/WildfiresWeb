@@ -40,11 +40,11 @@ def _build_mask():
 
 def _risk_to_rgba(risk):
     r = max(0, min(1, risk / 100))
-    if r < 0.05: return (0, 180, 0, 100)
-    elif r < 0.20: return (255, 220, 0, 100)
-    elif r < 0.50: return (255, 140, 0, 120)
-    elif r < 0.80: return (220, 0, 0, 140)
-    else: return (140, 0, 200, 160)
+    if r < 0.20: return (22, 163, 74, 100)
+    elif r < 0.40: return (245, 158, 11, 100)
+    elif r < 0.65: return (249, 115, 22, 120)
+    elif r < 0.85: return (220, 38, 38, 140)
+    else: return (124, 58, 237, 160)
 
 
 def invalidate_cache():

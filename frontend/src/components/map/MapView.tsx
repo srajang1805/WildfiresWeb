@@ -1,19 +1,26 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useAppStore } from "@/stores/appStore";
 import { INDIA_CENTER } from "@/lib/constants";
+import { api } from "@/lib/constants";
 import ActiveFireLayer from "@/components/map/ActiveFireLayer";
 import RegionOverlay from "@/components/map/RegionOverlay";
 import AlertMarkerLayer from "@/components/map/AlertMarkerLayer";
 
+const IMG_URL = api("/api/v1/heatmap-image.png");
+const IMG_BOUNDS: L.LatLngBoundsExpression = [[3.0, 64.0], [39.0, 100.0]];
+
 export default function MapView() {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
+  const overlayRef = useRef<L.ImageOverlay | null>(null);
   const markerRef = useRef<L.CircleMarker | null>(null);
+  const [loading, setLoading] = useState(true);
 
+  const heatmapVisible = useAppStore((s) => s.heatmapVisible);
   const firmsVisible = useAppStore((s) => s.firmsVisible);
   const forestRange = useAppStore((s) => s.activeReserve);
   const getForestBounds = useAppStore((s) => s.getReserveBounds);
@@ -50,9 +57,20 @@ export default function MapView() {
       }
     });
 
+    const overlay = L.imageOverlay(IMG_URL, IMG_BOUNDS, { opacity: 0.5, zIndex: 400 });
+    overlay.on("load", () => { overlayRef.current = overlay; setLoading(false); });
+    overlay.on("error", () => setLoading(false));
+    overlay.addTo(map);
+
+    setTimeout(() => setLoading(false), 10000);
+
     mapRef.current = map;
     return () => { map.remove(); mapRef.current = null; };
   }, []);
+
+  useEffect(() => {
+    if (overlayRef.current) overlayRef.current.setOpacity(heatmapVisible ? 0.5 : 0);
+  }, [heatmapVisible]);
 
   useEffect(() => {
     if (!mapRef.current || forestRange === "all") return;
@@ -76,6 +94,14 @@ export default function MapView() {
       <ActiveFireLayer map={mapRef.current} visible={firmsVisible} />
       <RegionOverlay map={mapRef.current} reserve={forestRange} />
       <AlertMarkerLayer map={mapRef.current} visible={true} />
+      {loading && (
+        <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center bg-white/60">
+          <div className="flex flex-col items-center gap-3 rounded-xl bg-white/90 px-8 py-5 shadow-xl">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+            <p className="text-[13px] font-medium text-slate-500">Loading wildfire data...</p>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -6,10 +6,13 @@ import { PANEL } from "@/lib/constants";
 import { Layers } from "lucide-react";
 
 export default function LayerControls() {
+  const heatmapVisible = useAppStore((s) => s.heatmapVisible);
+  const setHeatmapVisible = useAppStore((s) => s.setHeatmapVisible);
   const firmsVisible = useAppStore((s) => s.firmsVisible);
   const setFirmsVisible = useAppStore((s) => s.setFirmsVisible);
 
   const rows = [
+    { label: "Fire Risk Heatmap", value: heatmapVisible, toggle: () => setHeatmapVisible(!heatmapVisible) },
     { label: "Active Fires", value: firmsVisible, toggle: () => setFirmsVisible(!firmsVisible) },
   ];
 
