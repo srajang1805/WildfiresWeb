@@ -75,30 +75,59 @@ class WildfirePredictor:
         return results
 
     def predict_heatmap(self, resolution: float = 0.5) -> list[dict]:
-        from concurrent.futures import ThreadPoolExecutor
+        import requests
+        from ..weather.client import weather_client
 
         bounds = config.india_bounds
         lat_min, lat_max = bounds["lat_min"], bounds["lat_max"]
         lon_min, lon_max = bounds["lon_min"], bounds["lon_max"]
 
-        grid = set()
+        grid = []
         lat = lat_min
         while lat <= lat_max:
             lon = lon_min
             while lon <= lon_max:
-                grid.add((round(lat, 4), round(lon, 4)))
+                grid.append((round(lat, 4), round(lon, 4)))
                 lon += resolution
             lat += resolution
 
-        grid_list = list(grid)
-        chunk_size = 30
-        chunks = [grid_list[i:i + chunk_size] for i in range(0, len(grid_list), chunk_size)]
+        chunk_size = 300
+        chunks = [grid[i:i + chunk_size] for i in range(0, len(grid), chunk_size)]
+        month = datetime.now().month
 
         all_points = []
-        with ThreadPoolExecutor(max_workers=5) as executor:
-            futures = [executor.submit(self.predict_batch, chunk) for chunk in chunks]
-            for future in futures:
-                all_points.extend(future.result())
+        default_weather = {"temperature": 30, "humidity": 40, "wind": 5}
+
+        for chunk in chunks:
+            try:
+                weather_list = weather_client.fetch_batch(chunk)
+            except Exception:
+                weather_list = [default_weather] * len(chunk)
+
+            feature_rows = []
+            chunk_meta = []
+            for i, (lat, lon) in enumerate(chunk):
+                w = weather_list[i] if i < len(weather_list) else default_weather
+                temp = w["temperature"]
+                humidity = w["humidity"]
+                wind_val = w["wind"]
+                features = build_feature_array(lat, lon, temp, humidity, wind_val, month)
+                feature_rows.append(features)
+                chunk_meta.append((lat, lon, temp))
+
+            arr = np.array(feature_rows, dtype=np.float32)
+            probs = self.model.predict_proba(arr)[:, 1]
+
+            for i, (lat, lon, temp) in enumerate(chunk_meta):
+                raw_risk = float(probs[i]) * 100
+                risk = apply_snowy_region_filter(lat, lon, temp, raw_risk)
+
+                if risk > 0.5:
+                    all_points.append({
+                        "lat": lat,
+                        "lon": lon,
+                        "risk": round(risk, 2),
+                    })
 
         return all_points
 
