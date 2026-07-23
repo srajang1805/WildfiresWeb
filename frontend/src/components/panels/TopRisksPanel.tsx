@@ -6,21 +6,16 @@ import { useAppStore } from "@/stores/appStore";
 import { Flame, MapPin } from "lucide-react";
 import { PANEL, RISK_COLORS, api } from "@/lib/constants";
 
-interface Hotspot { lat: number; lon: number; risk: number }
-type Ring = [number, number][];
+interface Hotspot { lat: number; lon: number; risk: number; name: string }
 
-function pointInPolygon(px: number, py: number, ring: Ring): boolean {
-  let inside = false;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
-    if ((yi > py) !== (yj > py) && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) inside = !inside;
-  }
-  return inside;
-}
-
-function isInsideIndia(lat: number, lon: number, rings: Ring[]): boolean {
-  return rings.some((ring) => pointInPolygon(lon, lat, ring));
-}
+const HOTSPOTS = [
+  { lat: 22.23, lon: 86.41, name: "Similipal" },
+  { lat: 29.39, lon: 79.28, name: "Corbett" },
+  { lat: 26.17, lon: 91.77, name: "Jyotikuchi" },
+  { lat: 25.85, lon: 92.95, name: "Laisong" },
+  { lat: 19.08, lon: 72.88, name: "Mumbai" },
+  { lat: 12.97, lon: 77.59, name: "Bengaluru" },
+];
 
 function riskColor(r: number): string {
   if (r < 20) return RISK_COLORS.low;
@@ -30,27 +25,32 @@ function riskColor(r: number): string {
   return RISK_COLORS.extreme;
 }
 
+function riskLabel(r: number): string {
+  if (r < 20) return "Low";
+  if (r < 40) return "Moderate";
+  if (r < 65) return "High";
+  if (r < 85) return "Very High";
+  return "Extreme";
+}
+
 export default function TopRisksPanel() {
   const [hotspots, setHotspots] = useState<Hotspot[]>([]);
   const setViewState = useAppStore((s) => s.setViewState);
   const setSelectedPoint = useAppStore((s) => s.setSelectedPoint);
+  const setPredictionMode = useAppStore((s) => s.setPredictionMode);
 
   useEffect(() => {
-    Promise.all([
-      fetch(api("/api/v1/heatmap")).then((r) => r.json()),
-      fetch("/india.geojson").then((r) => r.json()),
-    ]).then(([hd, gj]) => {
-      const pts: Hotspot[] = hd.points || [];
-      const feats = (gj as { features: Array<{ geometry: { type: string; coordinates: unknown } }> }).features;
-      const rings: Ring[] = [];
-      for (const f of feats) {
-        const g = f.geometry;
-        const polys = g.type === "Polygon" ? [g.coordinates as number[][][]] : g.type === "MultiPolygon" ? (g.coordinates as number[][][][]) : [];
-        for (const poly of polys) for (const r of poly) rings.push(r as Ring);
-      }
-      const inside = pts.filter((p) => isInsideIndia(p.lat, p.lon, rings));
-      setHotspots([...inside].sort((a, b) => b.risk - a.risk).slice(0, 3));
-    }).catch(() => {});
+    Promise.all(
+      HOTSPOTS.map((h) =>
+        fetch(api(`/api/v1/predict?lat=${h.lat}&lon=${h.lon}`))
+          .then((r) => r.json())
+          .then((d) => ({ ...h, risk: d.wildfire_risk || 0 }))
+          .catch(() => ({ ...h, risk: 0 }))
+      )
+    ).then((results) => {
+      const sorted = results.sort((a, b) => b.risk - a.risk).slice(0, 3);
+      setHotspots(sorted);
+    });
   }, []);
 
   if (!hotspots.length) return null;
@@ -70,8 +70,9 @@ export default function TopRisksPanel() {
         <div className="space-y-1.5">
           {hotspots.map((h, i) => (
             <button
-              key={i}
+              key={h.name}
               onClick={() => {
+                setPredictionMode(true);
                 setViewState({ latitude: h.lat, longitude: h.lon, zoom: 10 });
                 setSelectedPoint({ lat: h.lat, lon: h.lon });
               }}
@@ -81,10 +82,12 @@ export default function TopRisksPanel() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1">
                   <MapPin className="h-2.5 w-2.5 shrink-0 text-slate-400" />
-                  <span className="text-[11px] font-mono text-slate-600 truncate">{h.lat.toFixed(2)}&deg;, {h.lon.toFixed(2)}&deg;</span>
+                  <span className="text-[12px] font-medium text-slate-700 truncate">{h.name}</span>
                 </div>
               </div>
-              <span className="text-[12px] font-bold tabular-nums shrink-0" style={{ color: riskColor(h.risk) }}>{h.risk.toFixed(0)}%</span>
+              <span className="text-[12px] font-bold tabular-nums shrink-0" style={{ color: riskColor(h.risk) }}>
+                {h.risk.toFixed(0)}%
+              </span>
             </button>
           ))}
         </div>
