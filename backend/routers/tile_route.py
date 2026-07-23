@@ -12,4 +12,8 @@ def heatmap_image():
         heatmap_module._refresh_cache()
         points = heatmap_module._heatmap_cache
     png = generate_heatmap_image(points)
-    return Response(content=png, media_type="image/png")
+    return Response(
+        content=png,
+        media_type="image/png",
+        headers={"Cache-Control": "public, max-age=900"},
+    )

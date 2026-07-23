@@ -3,6 +3,7 @@ import threading
 import logging
 from datetime import datetime, timezone
 from fastapi import APIRouter, Query
+from fastapi.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -57,8 +58,10 @@ def _refresh_cache():
             _cache_time = datetime.now(timezone.utc).isoformat()
             logger.info(f"Heatmap updated: {len(points)} points")
 
-            from backend.routers.tiles import invalidate_cache
+            from backend.routers.tiles import invalidate_cache, generate_heatmap_image
             invalidate_cache()
+            generate_heatmap_image(points)
+            logger.info("Heatmap image pre-generated")
         except Exception as e:
             logger.error(f"Heatmap refresh failed: {e}")
 
@@ -90,8 +93,11 @@ def get_heatmap(resolution: float = Query(0.5, ge=0.1, le=2.0)):
             points = _heatmap_cache
             cache_time = _cache_time
 
-    return {
-        "points": points,
-        "cached": True,
-        "generated_at": cache_time,
-    }
+    return JSONResponse(
+        content={
+            "points": points,
+            "cached": True,
+            "generated_at": cache_time,
+        },
+        headers={"Cache-Control": "public, max-age=300"},
+    )
