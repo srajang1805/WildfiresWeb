@@ -48,7 +48,7 @@ export default function TopRisksPanel() {
       initial={{ opacity: 0, x: 16 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.25, duration: 0.3 }}
-      className="absolute right-4 top-4 z-30 w-60"
+      className="absolute right-4 top-16 z-30 w-60"
     >
       <div className={`${PANEL} p-3`}>
         <div className="mb-2 flex items-center gap-2">
