@@ -28,6 +28,8 @@ async def lifespan(app: FastAPI):
     start_heatmap_worker()
     if os.environ.get("FIRMS_API_KEY"):
         start_firms_worker()
+        from backend.services.geo_fence import start_geo_fence_worker
+        start_geo_fence_worker()
 
     def _preload_rag():
         try:
@@ -60,6 +62,7 @@ from backend.routers.search import router as search_router
 from backend.routers.chat import router as chat_router
 from backend.routers.model_info import router as model_router
 from backend.routers.region_analysis import router as region_router
+from backend.routers.alerts import router as alerts_router
 
 app.include_router(heatmap_router)
 app.include_router(predict_router)
@@ -69,6 +72,7 @@ app.include_router(search_router)
 app.include_router(chat_router)
 app.include_router(model_router)
 app.include_router(region_router)
+app.include_router(alerts_router)
 
 
 @app.get("/health")

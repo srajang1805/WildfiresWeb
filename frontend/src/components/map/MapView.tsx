@@ -8,6 +8,7 @@ import { INDIA_CENTER } from "@/lib/constants";
 import { api } from "@/lib/constants";
 import ActiveFireLayer from "@/components/map/ActiveFireLayer";
 import RegionOverlay from "@/components/map/RegionOverlay";
+import AlertMarkerLayer from "@/components/map/AlertMarkerLayer";
 
 const IMG_URL = api("/api/v1/heatmap-image.png");
 const IMG_BOUNDS: L.LatLngBoundsExpression = [[3.0, 64.0], [39.0, 100.0]];
@@ -90,6 +91,7 @@ export default function MapView() {
       <div ref={container} className="absolute inset-0 z-0 bg-slate-100" />
       <ActiveFireLayer map={mapRef.current} visible={firmsVisible} />
       <RegionOverlay map={mapRef.current} reserve={forestRange} />
+      <AlertMarkerLayer map={mapRef.current} visible={true} />
       {loading && (
         <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center bg-white/60">
           <div className="flex flex-col items-center gap-3 rounded-xl bg-white/90 px-8 py-5 shadow-xl">

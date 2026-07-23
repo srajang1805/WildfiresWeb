@@ -9,6 +9,7 @@ import ForestFilter from "@/components/panels/ForestFilter";
 import PredictionModal from "@/components/overlays/PredictionModal";
 import Chatbot from "@/components/overlays/Chatbot";
 import TopRisksPanel from "@/components/panels/TopRisksPanel";
+import AlertPanel from "@/components/panels/AlertPanel";
 
 const MapView = dynamic(() => import("@/components/map/MapView"), {
   ssr: false,
@@ -28,6 +29,7 @@ export default function Home() {
       <MapView />
       <TopBar />
       <ForestFilter active={activeReserve} onChange={(r) => setActiveReserve(r.id)} />
+      <AlertPanel />
       <TopRisksPanel />
       <LayerControls />
       <Legend />
