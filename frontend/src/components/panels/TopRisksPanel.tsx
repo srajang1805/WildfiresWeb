@@ -26,7 +26,7 @@ function riskLabel(r: number): string {
 
 export default function TopRisksPanel() {
   const [hotspots, setHotspots] = useState<Hotspot[]>([]);
-  const setViewState = useAppStore((s) => s.setViewState);
+  const setFlyTo = useAppStore((s) => s.setFlyTo);
   const setSelectedPoint = useAppStore((s) => s.setSelectedPoint);
   const setPredictionMode = useAppStore((s) => s.setPredictionMode);
 
@@ -61,7 +61,7 @@ export default function TopRisksPanel() {
               key={`${h.lat}-${h.lon}`}
               onClick={() => {
                 setPredictionMode(true);
-                setViewState({ latitude: h.lat, longitude: h.lon, zoom: 10 });
+                setFlyTo({ lat: h.lat, lon: h.lon, zoom: 10 });
                 setSelectedPoint({ lat: h.lat, lon: h.lon });
               }}
               className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-slate-50 group"

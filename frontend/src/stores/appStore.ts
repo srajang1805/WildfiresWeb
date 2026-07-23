@@ -27,6 +27,9 @@ interface AppState {
   activeReserve: string;
   setActiveReserve: (r: string) => void;
   getReserveBounds: (r: string) => [[number, number], [number, number]];
+
+  flyTo: { lat: number; lon: number; zoom: number } | null;
+  setFlyTo: (p: { lat: number; lon: number; zoom: number } | null) => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -47,4 +50,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   activeReserve: "all",
   setActiveReserve: (r) => set({ activeReserve: r }),
   getReserveBounds: (r) => RESERVE_BOUNDS[r] || RESERVE_BOUNDS.all,
+
+  flyTo: null,
+  setFlyTo: (p) => set({ flyTo: p }),
 }));

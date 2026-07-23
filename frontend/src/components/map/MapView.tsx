@@ -27,6 +27,8 @@ export default function MapView() {
   const selectedPoint = useAppStore((s) => s.selectedPoint);
   const setViewState = useAppStore((s) => s.setViewState);
   const setSelectedPoint = useAppStore((s) => s.setSelectedPoint);
+  const flyTo = useAppStore((s) => s.flyTo);
+  const setFlyTo = useAppStore((s) => s.setFlyTo);
 
   useEffect(() => {
     if (!container.current || mapRef.current) return;
@@ -78,6 +80,12 @@ export default function MapView() {
     const lb = L.latLngBounds([bounds[0][0], bounds[0][1]], [bounds[1][0], bounds[1][1]]);
     mapRef.current.flyToBounds(lb, { padding: [60, 60], duration: 1.0, maxZoom: 14 });
   }, [forestRange, getForestBounds]);
+
+  useEffect(() => {
+    if (!mapRef.current || !flyTo) return;
+    mapRef.current.flyTo([flyTo.lat, flyTo.lon], flyTo.zoom, { duration: 1.0 });
+    setFlyTo(null);
+  }, [flyTo, setFlyTo]);
 
   useEffect(() => {
     if (!mapRef.current) return;
